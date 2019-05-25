@@ -1,57 +1,64 @@
-(import jedhy.api)
-(import socket)
-(import sys)
-(import time)
-(setv jed jedhy.api.API)
-(defmacro --- []`()) ;; dummy macro to init --macros-- variable
+;; add 'jedhyserv-' prefix to filter candidates from serv.hy on client
+(import [jedhy [api :as jedhyserv-jedhy-api]])
+(import [socket :as jedhyserv-socket])
+(import [sys :as jedhyserv-sys])
+(import [time :as jedhyserv-time])
+(setv jedhyserv-jed jedhyserv-jedhy-api.API)
+(defmacro jedhyserv-dummymacro []`()) ;; dummy macro to init --macros-- variable
 
-(setv port (int (get sys.argv (- (len sys.argv) 1))))
+(setv jedhyserv-port (int (get jedhyserv-sys.argv (- (len jedhyserv-sys.argv) 1))))
 
-;; LOADFILE filename
-;;; load file contents to current process
+(jedhyserv-jed.set-namespace :self jedhyserv-jed :locals- (locals) :macros- --macros--)
+
+;; EVACODE code
+;;; set symbols available in the code to jedhy environment
 ;; COMPLETE prefix
 ;;; return list of candidates
-(with [sock (socket.socket socket.AF-INET socket.SOCK-STREAM) ]
-  (.bind sock (, "localhost" port))
-  (.listen sock 1)
-  (setv [conn addr] (.accept sock))
-  (.close sock)
-  (with [conn]
+(with [jedhyserv-sock (jedhyserv-socket.socket jedhyserv-socket.AF-INET jedhyserv-socket.SOCK-STREAM) ]
+  (.bind jedhyserv-sock (, "localhost" jedhyserv-port))
+  (.listen jedhyserv-sock 1)
+  (setv [jedhyserv-conn jedhyserv-addr] (.accept jedhyserv-sock))
+  (.close jedhyserv-sock)
+  (with [jedhyserv-conn]
     (while [True]
-      (setv text ((. (conn.recv 1024) decode)))
+      (setv jedhyserv-text ((. (jedhyserv-conn.recv 65536) decode)))
+      (print jedhyserv-text)
       (cond
         ;; load file should be evaluated on top level
-        [ (.startswith text "EVALCODE ") 
-              (do (-> 
-                (get (text.split) (slice 1))
-                (.join " ") 
-                (read-str)
-                (eval))
-                (jed.set-namespace :self jed :locals- (locals) :macros- --macros--))]
-        [(.startswith text "COMPLETE ")
+        [(.startswith jedhyserv-text "EVALCODE ") 
+            (do (try
+                (->>
+                  (get jedhyserv-text (slice (len "EVALCODE ") None))
+                  (read-str)
+                  (eval)
+                  )
+                  (jedhyserv-conn.send b"DONE")
+                  (jedhyserv-jed.set-namespace :self jedhyserv-jed :locals- (locals) :macros- --macros--)
+                  ;;(print (locals))
+                  ;;(print --macros--)
+                  (except [e Exception] 
+                    (jedhyserv-conn.send (bytes (+ "jedhyserver error: " (str e)) "utf-8")))
+                  )
+                )]
+        [(.startswith jedhyserv-text "COMPLETE ")
           (do
-            (jed.set-namespace :self jed :locals- (locals) :macros- --macros--)
-              (print text)
-             ( ->> 
-              (get  (text.split) (slice 1 2))
-              (.join " ")
-              (print))
             (->> 
-              (get  (text.split) (slice 1 2))
+              (get  (jedhyserv-text.split) (slice 1 2))
               (.join " ")
-              (jed.complete jed)
+              (jedhyserv-jed.complete jedhyserv-jed)
               (str)
               ((fn [x] ( bytes x "utf8")))
-              (conn.send)
+              (jedhyserv-conn.send)
               )
               )]
-        [ (.startswith "KILL ")
-          (.shutdown conn)
-          (.close conn)
+        [(.startswith jedhyserv-text "KILL ")
+          (.shutdown jedhyserv-conn)
+          (.close jedhyserv-conn)
           (sys.exit 0)
           ]
         [True
           (do 
-            (conn.send (bytes (+ "unknown command: " text))))
+            (jedhyserv-conn.send (bytes (+ "unknown command: " jedhyserv-text) "utf8")))
           ]
           ))))
+

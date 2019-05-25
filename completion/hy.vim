@@ -27,9 +27,25 @@ Python jedhyclient=reload(jedhyclient)
 let g:jedhy_port = 50002
 
 function! HyCompletionInit()
-  Python jedhyclient.__init__(vim.eval('g:jedhy_wrapper_path'), vim.eval('g:jedhy_port'))
+  Python jedhyclient.init_server(vim.eval('g:jedhy_wrapper_path'), vim.eval('g:jedhy_port'))
 endfunction
- 
+
+function! HyCompletionInitMaybe()
+  Python jedhyclient.init_server_maybe(vim.eval('g:jedhy_wrapper_path'), vim.eval('g:jedhy_port'))
+endfunction
+
+function! HyLoadFile(filepath)
+  Python jedhyclient.load_file(vim.eval("a:filepath"))
+endfunction
+
+function! HyKillCompletion()
+  Python jedhyclient.kill_server()
+endfunction
+
+function! HyLoadFile(file)
+  Python jedhyclient.load_file(vim.eval("a:file"))
+endfunction
+
 function! HyCompletion(findstart, prefix)
 	  if a:findstart
 	    " locate the start of the word
@@ -47,15 +63,10 @@ function! HyCompletion(findstart, prefix)
    endif
 endfunction
 
-autocmd FileType hy set omnifunc=HyCompletion
+augroup hycompletion
+  autocmd FileType hy call HyCompletionInitMaybe()
+  autocmd FileType hy set omnifunc=HyCompletion
+augroup END
 
-function! HyLoadFile(filepath)
-  Python jedhyclient.load_file(vim.eval("a:filepath"))
-endfunction
-
-function! HyKillCompletion()
-  Python jedhyclient.kill_server()
-endfunction
-
-" call HyCompletionInit()
-" call HyCompletion(false, 'h')
+command! HyLoadCurrentFile call HyLoadFile(expand('%:p'))
+command! HyCompletionInit call HyCompletionInit()
