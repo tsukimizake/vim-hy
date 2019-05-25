@@ -63,10 +63,12 @@ function! HyCompletion(findstart, prefix)
    endif
 endfunction
 
-augroup hycompletion
-  autocmd FileType hy call HyCompletionInitMaybe()
-  autocmd FileType hy set omnifunc=HyCompletion
-augroup END
 
 command! HyLoadCurrentFile call HyLoadFile(expand('%:p'))
 command! HyCompletionInit call HyCompletionInit()
+
+augroup hycompletion
+  autocmd FileType hy call HyCompletionInitMaybe()
+  autocmd FileType hy set omnifunc=HyCompletion
+  autocmd FileType hy HyLoadCurrentFile
+augroup END
