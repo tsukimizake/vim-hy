@@ -19,14 +19,12 @@
 ;; TODO: filter unnecessary candidates from serv.hy implementation
 (defn transform-cands-to-vim-style [s]
   (import ast)
-  (print s)
   (setv lst (->>
   s
   ((app1 .decode "utf-8"))
   (ast.literal-eval)
   (list)
   ))
-  (print lst)
   (setv res "[ ")
   (for [s lst]
     (when (not (.startswith s "jedhyserv-"))
@@ -40,6 +38,10 @@
   (setv cands
     (transform-cands-to-vim-style (sock.recv 65536))) 
   (vim.command (+ "let result = " cands)))
+
+(defn change-dir [path]
+  (sock.sendall (bytes (+ "CHDIR " path) "utf8"))
+  )
 
 (defn eval-code [code]
   (->>
@@ -61,7 +63,6 @@
 
 (defn kill-server []
   (global sock)
-
   (if (is not None sock)
     (do
       (print "kill sock")
@@ -86,12 +87,10 @@
   (global proc)
   (print serverpath)
   (print port)
-  
-  
   (setv proc (subprocess.Popen ["hy" serverpath port] )) ;; on debugging serv.hy, maybe you should comment out this line and run server by `hy serv.hy {PORT} on your terminal in order to see serv.hy's stdout
   (global sock)
   (setv sock (socket.socket socket.AF-INET socket.SOCK-STREAM))
-  (time.sleep 0.5)
+  (time.sleep 1)
   (sock.connect (, "localhost" (int  port)))
   (print (+"jedhyserver started at " port)))
 

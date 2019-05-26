@@ -34,15 +34,15 @@ function! HyCompletionInitMaybe()
   Python jedhyclient.init_server_maybe(vim.eval('g:jedhy_wrapper_path'), vim.eval('g:jedhy_port'))
 endfunction
 
-function! HyLoadFile(filepath)
-  Python jedhyclient.load_file(vim.eval("a:filepath"))
-endfunction
 
 function! HyKillCompletion()
   Python jedhyclient.kill_server()
 endfunction
 
 function! HyLoadFile(file)
+  let a:path=fnamemodify(a:file, ':p:h')
+  echo a:path
+  Python jedhyclient.change_dir(vim.eval("a:path"))
   Python jedhyclient.load_file(vim.eval("a:file"))
 endfunction
 
@@ -62,7 +62,6 @@ function! HyCompletion(findstart, prefix)
      return result
    endif
 endfunction
-
 
 command! HyLoadCurrentFile call HyLoadFile(expand('%:p'))
 command! HyCompletionInit call HyCompletionInit()

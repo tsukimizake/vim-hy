@@ -1,8 +1,9 @@
-;; add 'jedhyserv-' prefix to filter candidates from serv.hy on client
+;; add 'jedhyserv-' prefix to filter candidates from serv.hy
 (import [jedhy [api :as jedhyserv-jedhy-api]])
 (import [socket :as jedhyserv-socket])
 (import [sys :as jedhyserv-sys])
 (import [time :as jedhyserv-time])
+(import [os :as jedhyserv-os])
 (setv jedhyserv-jed jedhyserv-jedhy-api.API)
 (defmacro jedhyserv-dummymacro []`()) ;; dummy macro to init --macros-- variable
 
@@ -10,6 +11,8 @@
 
 (jedhyserv-jed.set-namespace :self jedhyserv-jed :locals- (locals) :macros- --macros--)
 
+;; CHDIR path
+;;; call chdir for finding imports on EVALCODE
 ;; EVACODE code
 ;;; set symbols available in the code to jedhy environment
 ;; COMPLETE prefix
@@ -25,6 +28,11 @@
       (print jedhyserv-text)
       (cond
         ;; load file should be evaluated on top level
+        [ (.startswith jedhyserv-text "CHDIR ")
+          (->>
+            (get jedhyserv-text (slice (len "CHDIR ") None))
+            (jedhyserv-os.chdir))
+          ]
         [(.startswith jedhyserv-text "EVALCODE ") 
             (do (try
                 (->>
@@ -32,12 +40,12 @@
                   (read-str)
                   (eval)
                   )
-                  (jedhyserv-conn.send b"DONE")
+                  (jedhyserv-conn.send b"evalcode done")
                   (jedhyserv-jed.set-namespace :self jedhyserv-jed :locals- (locals) :macros- --macros--)
                   ;;(print (locals))
                   ;;(print --macros--)
                   (except [e Exception] 
-                    (jedhyserv-conn.send (bytes (+ "jedhyserver error: " (str e)) "utf-8")))
+                    (jedhyserv-conn.send (bytes (+ "jedhyserver error: " (str e)) "utf8")))
                   )
                 )]
         [(.startswith jedhyserv-text "COMPLETE ")
