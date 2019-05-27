@@ -1,4 +1,3 @@
-(import vim)
 (import subprocess)
 (import time)
 (import os)
@@ -8,15 +7,19 @@
 (setv sock None)
 (setv proc None)
 
+(try
+  (import vim)
+  (defn send-to-vim-maybe[s] (vim.command s))
+  (except [e Exception]
+    (defn send-to-vim-maybe[s] (print s))))
+
 (defn find-imports [filepath]
   (setv str (->
     (open filepath "r")
     (.read)))
   (re.findall r"\(import.*?\)" str re.S))
 
-
 ;; (transform-cands-to-vim-style "('hy', 'hey', 'hoy')") ; => "[ hy, hey, hoy, ]"
-;; TODO: filter unnecessary candidates from serv.hy implementation
 (defn transform-cands-to-vim-style [s]
   (import ast)
   (setv lst (->>
@@ -37,7 +40,8 @@
   (sock.sendall (bytes (+ "COMPLETE " text "\n") "utf8"))
   (setv cands
     (transform-cands-to-vim-style (sock.recv 65536))) 
-  (vim.command (+ "let result = " cands)))
+  (setv res (+ "let result = " cands))
+  (send-to-vim-maybe res))
 
 (defn change-dir [path]
   (sock.sendall (bytes (+ "CHDIR " path) "utf8"))
