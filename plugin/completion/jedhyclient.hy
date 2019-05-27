@@ -63,20 +63,31 @@
 
 (defn kill-server []
   (global sock)
-  (if (is not None sock)
-    (do
+  (print sock)
+  (when (server-alive?)
+    (try
       (print "kill sock")
-
       (sock.sendall b"KILL ")
-      (.shutdown sock)
-      (.close sock)
-      (setv sock None)))
-  (global proc)
-  (if (and (is not None proc) (is None (.poll proc))) (do (print "kill proc") (.terminate proc)))
-  )
+      (setv sock None)
+      (setv proc None)
+      (except [e BrokenPipeError]
+      (print "server killed"))
+      (except [e Exception]
+      (print "error on kill-server:" e))
+      )))
 
 (defn server-alive? []
-  (is not None sock))
+  (when (is None sock)
+    (return False))
+    (try
+      (sock.send b"PING ")
+      (sock.recv 100)
+      (except [e Exception]
+      (print e)
+      (return False))
+      )
+    (return True)
+    )
 
 (defn init-server-maybe [serverpath port]
   (when (not (server-alive?))
@@ -91,7 +102,10 @@
   (global sock)
   (setv sock (socket.socket socket.AF-INET socket.SOCK-STREAM))
   (time.sleep 1)
-  (sock.connect (, "localhost" (int  port)))
-  (print (+"jedhyserver started at " port)))
+  (try
+    (sock.connect (, "localhost" (int port)))
+    (except [e Exception]
+      (print e)
+      (return)))
+  (print (+"jedhyserver running at " port)))
 
-(print "jedhyclient loaded")

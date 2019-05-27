@@ -13,7 +13,7 @@
 
 ;; CHDIR path
 ;;; call chdir for finding imports on EVALCODE
-;; EVACODE code
+;; EVALCODE code
 ;;; set symbols available in the code to jedhy environment
 ;; COMPLETE prefix
 ;;; return list of candidates
@@ -60,9 +60,11 @@
               )
               )]
         [(.startswith jedhyserv-text "KILL ")
-          (.shutdown jedhyserv-conn)
-          (.close jedhyserv-conn)
-          (sys.exit 0)
+          (.shutdown jedhyserv-conn jedhyserv-socket.SHUT_RDWR)
+          (jedhyserv-sys.exit 0)
+          ]
+        [(.startswith jedhyserv-text "PING ")
+          (jedhyserv-conn.send b"PONG ")
           ]
         [True
           (do 
