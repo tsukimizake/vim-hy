@@ -25,6 +25,8 @@ Python import jedhyclient
 Python jedhyclient=reload(jedhyclient)
 
 let g:jedhy_port = 50002
+let g:jedhy_port_min = 50000
+let g:jedhy_port_min = 50010
 
 function! HyCompletionInit()
   Python jedhyclient.init_server(vim.eval('g:jedhy_wrapper_path'), vim.eval('g:jedhy_port'))
@@ -41,8 +43,11 @@ endfunction
 
 function! HyLoadFile(file)
   let a:path=fnamemodify(a:file, ':p:h')
-  echo a:path
-  Python jedhyclient.change_dir(vim.eval("a:path"))
+  let a:abspath=fnamemodify(a:file, ':p')
+  "echo a:file
+  "echo a:path
+  "echo a:abspath
+  Python jedhyclient.change_dir(vim.eval("a:abspath"))
   Python jedhyclient.load_file(vim.eval("a:file"))
 endfunction
 

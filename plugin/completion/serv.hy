@@ -31,9 +31,9 @@
         [ (.startswith jedhyserv-text "CHDIR ")
           (->>
             (get jedhyserv-text (slice (len "CHDIR ") None))
-            (jedhyserv-os.chdir))
+            (jedhyserv-sys.path.append))
           ]
-        [(.startswith jedhyserv-text "EVALCODE ") 
+        [(.startswith jedhyserv-text "EVALCODE ")
             (do (try
                 (->>
                   (get jedhyserv-text (slice (len "EVALCODE ") None))
@@ -44,7 +44,7 @@
                   (jedhyserv-jed.set-namespace :self jedhyserv-jed :locals- (locals) :macros- --macros--)
                   ;;(print (locals))
                   ;;(print --macros--)
-                  (except [e Exception] 
+                  (except [e Exception]
                     (jedhyserv-conn.send (bytes (+ "jedhyserver error: " (str e)) "utf8")))
                   )
                 )]
@@ -67,7 +67,7 @@
           (jedhyserv-conn.send b"PONG ")
           ]
         [True
-          (do 
+          (do
             (jedhyserv-conn.send (bytes (+ "unknown command: " jedhyserv-text) "utf8")))
           ]
           ))))
