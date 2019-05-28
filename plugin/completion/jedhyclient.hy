@@ -50,7 +50,7 @@
 (defn eval-code [code]
   (->>
     code
-    ((app2 + "EVALCODE (do " ")\n"))
+    ((app2 + "EVALCODE (do " "\n)\n"))
     ((app1 bytes "utf8"))
     (sock.sendall)
     )
@@ -105,11 +105,13 @@
   (setv proc (subprocess.Popen ["hy" serverpath port] )) ;; on debugging serv.hy, maybe you should comment out this line and run server by `hy serv.hy {PORT} on your terminal in order to see serv.hy's stdout
   (global sock)
   (setv sock (socket.socket socket.AF-INET socket.SOCK-STREAM))
-  (time.sleep 1)
+  (for [i (range 0 10)]
+  (time.sleep 0.1)
   (try
     (sock.connect (, "localhost" (int port)))
+    (break)
     (except [e Exception]
       (print e)
-      (return)))
+      (return))))
   (print (+"jedhyserver running at " port)))
 
