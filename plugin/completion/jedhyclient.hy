@@ -58,6 +58,7 @@
     )
 
 (defn load-file [file]
+  (unless (os.path.exists file) (return))
   (->>
     file
     (open)

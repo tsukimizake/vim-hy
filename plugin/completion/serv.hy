@@ -26,12 +26,12 @@
     (while [True]
       (setv jedhyserv-text ((. (jedhyserv-conn.recv 65536) decode)))
       (print jedhyserv-text)
-      (cond
-        ;; load file should be evaluated on top level
+      ( cond
         [ (.startswith jedhyserv-text "CHDIR ")
           (->>
             (get jedhyserv-text (slice (len "CHDIR ") None))
             (jedhyserv-sys.path.append))
+            ;;(print jedhyserv-sys.path)
           ]
         [(.startswith jedhyserv-text "EVALCODE ")
             (do (try

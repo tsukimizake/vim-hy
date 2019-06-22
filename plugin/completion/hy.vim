@@ -25,8 +25,6 @@ Python import jedhyclient
 Python jedhyclient=reload(jedhyclient)
 
 let g:jedhy_port = 50002
-let g:jedhy_port_min = 50000
-let g:jedhy_port_min = 50010
 
 function! HyCompletionInit()
   Python jedhyclient.init_server(vim.eval('g:jedhy_wrapper_path'), vim.eval('g:jedhy_port'))
@@ -43,11 +41,9 @@ endfunction
 
 function! HyLoadFile(file)
   let a:path=fnamemodify(a:file, ':p:h')
-  let a:abspath=fnamemodify(a:file, ':p')
   "echo a:file
   "echo a:path
-  "echo a:abspath
-  Python jedhyclient.change_dir(vim.eval("a:abspath"))
+  Python jedhyclient.change_dir(vim.eval("a:path"))
   Python jedhyclient.load_file(vim.eval("a:file"))
 endfunction
 
@@ -71,8 +67,12 @@ endfunction
 command! HyLoadCurrentFile call HyLoadFile(expand('%:p'))
 command! HyCompletionInit call HyCompletionInit()
 
+function! HyCompletionAutocmd ()
+  call HyCompletionInitMaybe()
+  call setlocal omnifunc=HyCompletion
+  HyLoadCurrentFile
+endfunction
+
 augroup hycompletion
-  autocmd FileType hy call HyCompletionInitMaybe()
-  autocmd FileType hy set omnifunc=HyCompletion
-  autocmd FileType hy HyLoadCurrentFile
+  autocmd FileType hy call HyCompletionAutocmd()
 augroup END
