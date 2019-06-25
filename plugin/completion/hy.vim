@@ -69,7 +69,7 @@ command! HyCompletionInit call HyCompletionInit()
 
 function! HyCompletionAutocmd ()
   call HyCompletionInitMaybe()
-  call setlocal omnifunc=HyCompletion
+  call setlocal omnifunc=HyCompletion()
   HyLoadCurrentFile
 endfunction
 
