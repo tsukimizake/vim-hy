@@ -40,10 +40,10 @@ function! HyKillCompletion()
 endfunction
 
 function! HyLoadFile(file)
-  let a:path=fnamemodify(a:file, ':p:h')
-  "echo a:file
-  "echo a:path
-  Python jedhyclient.change_dir(vim.eval("a:path"))
+  let l:path=fnamemodify(a:file, ':p:h')
+  echo a:file
+  echo l:path
+  Python jedhyclient.change_dir(vim.eval("l:path"))
   Python jedhyclient.load_file(vim.eval("a:file"))
 endfunction
 
